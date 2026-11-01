@@ -1,0 +1,10 @@
+﻿models/
+out/
+build-hip/
+bin/
+src/
+hip/*.exe
+*.webm
+*.log
+*.gguf
+*.safetensors
