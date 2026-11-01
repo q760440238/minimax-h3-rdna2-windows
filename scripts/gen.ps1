@@ -60,7 +60,7 @@ param(
 
 $M = 'E:\minimaxh3\models'
 $teDefault = "$M\text_encoders\qwen3vl_32b_minimax_h3-Q2_K_M.gguf"
-if (-not (Test-Path $teDefault)) { $teDefault = "$M\text_encoders\qwen3vl_32b_minimax_h3-Q4_K_M.gguf" }
+if (-not (Test-Path $teDefault)) { throw "text encoder not found: $teDefault  (run .\download_models.ps1)" }
 
 # --- presets ---------------------------------------------------------------
 $useLora = $false
@@ -96,7 +96,7 @@ if ($Backend -eq 'rocm') {
     $dev = 'Vulkan0'
     $env:GGML_VK_ENABLE_MEMORY_PRIORITY = '1'
     # Vulkan only reaches the fast GEMM path with a LoRA applied; use a no-op one.
-    if (-not $useLora) { $useLora = $true; $useTurbo = $false }
+    if (-not $useLora -and (Test-Path "$M\loras\minimax_h3_fl2v_turbo_4step_v1.3_768p_comfyui_bf16.safetensors")) { $useLora = $true; $useTurbo = $false }
     if ($MaxVram -eq 0) { $MaxVram = 15 }
 }
 
@@ -127,8 +127,8 @@ $cliArgs = @(
     '-W', $W, '-H', $H,
     '--fps', 24,
     '--video-frames', $Frames,
-    '--offload-to-cpu',
-    '--lora-model-dir', "$M\loras"
+    '--offload-to-cpu'
+    # lora dir appended below only when a LoRA is used
 )
 # WDDM/VRAM budget guard. With ~11.4 GB of weights staged, activations larger than
 # ~600 MB (long clips at high resolution) get demoted to shared memory by the OS and
@@ -139,6 +139,7 @@ $estTokens = $latentT * [int][math]::Floor($W / 32) * [int][math]::Floor($H / 32
 if ($Backend -eq 'rocm' -and $estTokens -ge 5500 -and -not $NoMaxVram) {
     $cliArgs += @('--max-vram', "$dev=$MaxVramCap")
 }
+if ($loraSpec) { $cliArgs += @('--lora-model-dir', "$M\loras") }
 $cliArgs += @('-o', $Out)
 # Flash attention policy (re-measured 2026-11-02 AFTER the WDDM/VRAM fix):
 #   ROCm  : FA is neutral at 22f (49.5 vs 49.7 s) and 25% faster at 56f
