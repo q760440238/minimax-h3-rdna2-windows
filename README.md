@@ -8,7 +8,7 @@ ROCm/HIP backend.
 Everything here was measured on one machine. The numbers are reproducible with the
 included scripts; the analysis documents explain *why* they are what they are.
 
-**Result: 3707 s → 191 s for a 480p / 2.3 s clip (19.4×)**, with a documented
+**Result: 3707 s → 183 s for a 480p / 2.3 s clip (20.3×)**, with a documented
 breakdown of where the remaining time goes.
 
 > **Unofficial project. No model weights are distributed here.**
@@ -65,10 +65,10 @@ Presets:
 
 | Preset | Resolution | Frames | Steps | Measured |
 | --- | --- | --- | --- | --- |
-| `fast` | 864×480 | 22 (0.9 s) | 8 | **69.8 s** |
+| `fast` | 864×480 | 22 (0.9 s) | 8 | **67.2 s** |
 | `draft` | 512×288 | 56 (2.3 s) | 8 | **72.2 s** |
 | `quality` | 864×480 | 22 (0.9 s) | 20 | **138.5 s** |
-| `longhd` | 864×480 | 56 (2.3 s) | 8 | **191.8 s** |
+| `longhd` | 864×480 | 56 (2.3 s) | 8 | **183.0 s** |
 
 ---
 
@@ -104,6 +104,24 @@ Vulkan backend, `ggml_vk_get_mul_mat_mat_f16acc()` requires `prec == GGML_PREC_D
 so that single line forces a pure-f32 shader GEMM — measured at **0.8 TFLOPS (1.7% of
 peak)**. Turning on flash attention fixes it: 94.1 → 38.9 s/step, **2.4×**.
 
+### 4. The stock RDNA2 Q4_K tile config stops at J=64, but the max is 128 (+7.9%)
+
+`mmq-config-rdna2.cuh` ships Q4_K rows with J ∈ {8..64} while the kernel's
+compile-time limit is `static_assert(J <= 128)`. For the wide FFN projection
+(K=5376, M=28672) the weight tile is re-read `N/J` = 45 times; J=128 halves that.
+
+Measured with the standalone `kernels/gemm_bench.cpp` (drives ggml's own backend):
+
+| Shape | stock | +J=128 | gain |
+| --- | --- | --- | --- |
+| fc1 22f (5376×28672×2835) | 25.88 TFLOPS | **27.92** | +7.9% |
+| fc1 56f (5376×28672×6885) | 26.05 | **28.59** | +9.7% |
+| fc2 22f (28672×5376×2835) | 24.24 | **25.59** | +5.6% |
+| qkv 22f (5376×21504×2835) | 26.00 | **27.88** | +7.2% |
+
+End-to-end: 22f 50.5 → 49.2 s, 56f 145.3 → 138.4 s. Two config lines — worth an
+upstream PR.
+
 ---
 
 ## Where the time goes now
@@ -114,8 +132,8 @@ At 22 frames / 8 steps / 864×480 (sampling loop only):
 | --- | --- | --- |
 | End-to-end (incl. TE + VAE) | 14.1 TFLOPS | 30.6% |
 | Sampling loop | 19.2 TFLOPS | 41.6% |
-| MUL_MAT (q4_K GEMM) alone | ~22.5 TFLOPS | 49% |
-| Isolated q4_K kernel | 24.2 TFLOPS | 52.5% |
+| MUL_MAT (q4_K GEMM) alone | ~27.9 TFLOPS | 60% |
+| Isolated q4_K kernel (J=128) | 27.9–28.6 TFLOPS | 60–62% |
 | RDNA2 practical SIMT ceiling | ~30 TFLOPS | ~65% |
 
 The GEMM is at 94% of its own kernel floor. Going meaningfully faster needs either

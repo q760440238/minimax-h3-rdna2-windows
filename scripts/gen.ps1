@@ -78,7 +78,17 @@ if ($Backend -eq 'auto') { $Backend = if ($hasRocm) { 'rocm' } else { 'vulkan' }
 if ($Backend -eq 'rocm' -and -not $hasRocm) { $Backend = 'vulkan' }
 
 if ($Backend -eq 'rocm') {
-    $sd = 'E:\minimaxh3\bin\sd-rocm\sd-cli.exe'
+    # Prefer the self-built binary: it carries the Q4_K J=128 MMQ tile for gfx1030
+    # (+7.9% kernel, -4.7% end-to-end). Fall back to the official release, which is
+    # self-contained (no PATH setup needed).
+    $custom = 'E:\minimaxh3\build-hip\bin\sd-cli.exe'
+    $sdkBin = 'E:\minimaxh3\bin\rocm-core\PFiles64\AMD\ROCm\7.2\bin'
+    if ((Test-Path $custom) -and (Test-Path $sdkBin) -and -not $NoCustomBuild) {
+        $sd = $custom
+        $env:PATH = "$sdkBin;$env:PATH"
+    } else {
+        $sd = 'E:\minimaxh3\bin\sd-rocm\sd-cli.exe'
+    }
     $dev = 'ROCm0'
 } else {
     $sd = 'E:\minimaxh3\bin\sd-vulkan\sd-cli.exe'
