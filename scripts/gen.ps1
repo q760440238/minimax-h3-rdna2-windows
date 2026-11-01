@@ -139,10 +139,12 @@ if ($Backend -eq 'rocm' -and $estTokens -ge 5500 -and -not $NoMaxVram) {
     $cliArgs += @('--max-vram', "$dev=$MaxVramCap")
 }
 $cliArgs += @('-o', $Out)
-# Flash attention policy (measured 2026-11-01):
-#   ROCm  : FA off is equal at 22f and 15-24% faster at 56f -> disable by default
-#   Vulkan: FA must stay on (FA-off at 22f measured 70 s/step vs 40)
-$useFa = ($Backend -eq 'vulkan')
+# Flash attention policy (re-measured 2026-11-02 AFTER the WDDM/VRAM fix):
+#   ROCm  : FA is neutral at 22f (49.5 vs 49.7 s) and 25% faster at 56f
+#           (184.4 -> 138.4 s); sd-cli's "auto" picks the slow path at 56f,
+#           so force it on once the token count gets large.
+#   Vulkan: FA must stay on (FA-off at 22f measured 70 s/step vs 40).
+$useFa = ($Backend -eq 'vulkan') -or ($estTokens -ge 4000)
 if ($FlashAttn) { $useFa = $true }
 if ($NoFlashAttn) { $useFa = $false }
 if ($useFa) { $cliArgs += @('--flash-attn', 'on') }
