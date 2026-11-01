@@ -11,6 +11,15 @@ included scripts; the analysis documents explain *why* they are what they are.
 **Result: 3707 s → 191 s for a 480p / 2.3 s clip (19.4×)**, with a documented
 breakdown of where the remaining time goes.
 
+> **Unofficial project. No model weights are distributed here.**
+> MiniMax-H3 is **not** open source — it is governed by the
+> [MiniMax H3 Community License Agreement](https://huggingface.co/MiniMaxAI/MiniMax-H3/blob/main/LICENSE),
+> which names the **United States, European Union, United Kingdom and South Korea as
+> Excluded Territories** requiring a separate license. Downloading or using the model
+> is your agreement to those terms. This repository ships only PowerShell scripts and
+> documentation; `stable-diffusion.cpp` is MIT.
+
+
 ---
 
 ## What is in here

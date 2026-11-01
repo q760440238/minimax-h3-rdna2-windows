@@ -1,0 +1,36 @@
+﻿# Third-party notices
+
+This repository contains **only** original PowerShell scripts, build helpers and
+documentation. It does **not** contain, vendor, or redistribute:
+
+- MiniMax-H3 model weights or any file from the MiniMax-H3 repository
+- stable-diffusion.cpp source code
+- ggml source code
+
+## stable-diffusion.cpp
+
+MIT License, Copyright (c) 2023 leejet.
+https://github.com/leejet/stable-diffusion.cpp/blob/master/LICENSE
+
+The build script in `scripts/` fetches and builds it from upstream; the patches
+described in the documentation are small, original changes.
+
+## MiniMax-H3
+
+**Not open source.** The model is distributed under the
+MiniMax H3 Community License Agreement:
+https://huggingface.co/MiniMaxAI/MiniMax-H3/blob/main/LICENSE
+
+That license contains territory, commercial-use, distribution, hosted-service,
+attribution and acceptable-use terms. According to MiniMax's own deployment guide,
+the **United States, European Union, United Kingdom and South Korea are Excluded
+Territories** and require a separate license.
+
+This repository neither distributes nor re-licenses the model. The scripts download
+weights from the official mirrors at the user's request; obtaining and using those
+weights is the user's agreement to the model license.
+
+## AMD ROCm / HIP
+
+The runtime extraction script operates on AMD's publicly distributed installer.
+AMD's license terms for the HIP SDK apply to those binaries.
