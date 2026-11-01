@@ -36,6 +36,8 @@ breakdown of where the remaining time goes.
 | `docs/FRAME56-CLIFF.md` | Case study of a 2.8× cliff caused by WDDM silently demoting allocations to shared memory. |
 | `docs/ATTENTION-KERNEL-BENCH.md` | Standalone HIP attention kernel: 8.76 TFLOPS on gfx1030 (18–19% of peak). |
 
+Also mirrored on Hugging Face: https://huggingface.co/kylinfires/minimax-h3-rdna2-windows
+
 Model weights are **not** included. The scripts download them from ModelScope /
 Hugging Face.
 
