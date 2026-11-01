@@ -50,11 +50,12 @@ param(
     [switch]$FlashAttn,
     [switch]$NoMmap,
     [switch]$NoVaeTiling,
+    [switch]$VaeTiling,
     [int]$MaxVram = 0,
     [string]$ExtraArgs = "",
     [string]$Te = '',
     [switch]$NoMaxVram,
-    [int]$MaxVramCap = 11
+    [int]$MaxVramCap = 12
 )
 
 $M = 'E:\minimaxh3\models'
@@ -150,7 +151,9 @@ if ($NoFlashAttn) { $useFa = $false }
 if ($useFa) { $cliArgs += @('--flash-attn', 'on') }
 if (-not $NoMmap) { $cliArgs += '--mmap' }
 # VAE tiling only pays off for long clips (56f: -4%; 22f: +2%).
-if (-not $NoVaeTiling -and $Frames -ge 39) { $cliArgs += '--vae-tiling' }
+# VAE spatial tiling is a LOSS with the current build/config: measured +15.5 s at 22f
+# and +4.4 s at 56f (decode 25.0 vs 20.6 s). Keep it off unless explicitly requested.
+if ($VaeTiling) { $cliArgs += '--vae-tiling' }
 if ($MaxVram -gt 0) { $cliArgs += @('--max-vram', "$dev=$MaxVram") }
 if ($ExtraArgs) { $cliArgs += ($ExtraArgs -split '\s+') }
 
