@@ -23,6 +23,7 @@ if "%1"=="configure" (
     -DCMAKE_HIP_COMPILER="%ROCM%\bin\clang++.exe" ^
     -DCMAKE_HIP_ARCHITECTURES=gfx1030 ^
     -Dhip_DIR="%ROCM%\lib\cmake\hip" ^
+  ^
     -DSD_SERVER_BUILD_FRONTEND=OFF %EXTRA_CMAKE% ^
     -DSD_BUILD_EXAMPLES=ON
   exit /b %ERRORLEVEL%
